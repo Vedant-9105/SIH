@@ -3,24 +3,8 @@
 // Complete JavaScript Controller for Phases 1, 2, 3, and 4
 // =============================================================================
 
-// Environment-aware Backend API URL:
-// Localhost: points to local FastAPI backend (http://127.0.0.1:8000)
-// Production: points to Render backend service
-const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:')
-    ? 'http://127.0.0.1:8000'
-    : 'https://project-humnread.onrender.com'; // Set to your live Render backend URL
-
-/**
- * Normalizes relative API / media paths to point to API_BASE.
- */
-function apiUrl(path) {
-    if (!path) return '';
-    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:') || path.startsWith('blob:')) {
-        return path;
-    }
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${API_BASE}${cleanPath}`;
-}
+// Base URL pointing directly to the live Render backend
+const API_BASE = 'https://project-humnread.onrender.com';
 
 document.addEventListener('DOMContentLoaded', () => {
     // -------------------------------------------------------------------------
@@ -148,6 +132,15 @@ document.addEventListener('DOMContentLoaded', () => {
         { key: "veg_nonveg", label: "Veg / Non-Veg Statutory Symbol", rule: "FSSAI Packaging Norms" }
     ];
 
+    // Helper: Normalize relative backend asset paths to absolute URLs
+    function formatAssetUrl(url) {
+        if (!url) return '';
+        if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+            return url;
+        }
+        return `${API_BASE}${url.startsWith('/') ? '' : '/'}${url}`;
+    }
+
     // -------------------------------------------------------------------------
     // Initialization
     // -------------------------------------------------------------------------
@@ -173,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetPane = document.getElementById(targetId);
             if (targetPane) targetPane.classList.add('active');
 
-            // Trigger tab specific refreshes
+            // Trigger tab-specific data refresh
             if (targetId === 'tabSupervisor') loadSupervisorQueue('ALL');
             if (targetId === 'tabAdmin') { loadAdminAnalytics(); loadAuditLogs(); }
             if (targetId === 'tabLegal') { loadTraceabilityMatrix(); loadLegalInspectionOptions(); }
@@ -212,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnHeaderSync.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Syncing...';
 
         try {
-            const resp = await fetch(apiUrl('/api/inspections/sync'), {
+            const resp = await fetch(`${API_BASE}/api/inspections/sync`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ inspections: offlineQueue })
@@ -247,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // -------------------------------------------------------------------------
     async function loadStores() {
         try {
-            const resp = await fetch(apiUrl('/api/stores'));
+            const resp = await fetch(`${API_BASE}/api/stores`);
             if (!resp.ok) return;
             const stores = await resp.json();
             storeSelect.innerHTML = '';
@@ -271,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadUsers() {
         try {
-            const resp = await fetch(apiUrl('/api/users'));
+            const resp = await fetch(`${API_BASE}/api/users`);
             if (!resp.ok) return;
             const users = await resp.json();
             assignOfficerSelect.innerHTML = '';
@@ -286,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Drag & Drop
+    // Drag & Drop Handling
     ['dragenter', 'dragover'].forEach(name => {
         dropZone.addEventListener(name, (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
     });
@@ -334,25 +327,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // Quick Test Bench Sample Loaders
     btnLoadNonCompliantSample.addEventListener('click', async () => {
         try {
-            const resp = await fetch(apiUrl('/uploads/test_non_compliant_dal.jpg'));
+            const resp = await fetch(`${API_BASE}/uploads/test_non_compliant_dal.jpg`);
             const blob = await resp.blob();
             const file = new File([blob], 'test_non_compliant_dal.jpg', { type: 'image/jpeg' });
             handleSelectedFile(file);
             commodityCategorySelect.value = 'Packaged Food';
         } catch (e) {
-            alert('Sample test image not available yet. Upload any packaged commodity image.');
+            alert('Sample test image not available on the server. Upload any packaged commodity image.');
         }
     });
 
     btnLoadCompliantSample.addEventListener('click', async () => {
         try {
-            const resp = await fetch(apiUrl('/uploads/synthetic_test_product.jpg'));
+            const resp = await fetch(`${API_BASE}/uploads/synthetic_test_product.jpg`);
             const blob = await resp.blob();
             const file = new File([blob], 'synthetic_test_product.jpg', { type: 'image/jpeg' });
             handleSelectedFile(file);
             commodityCategorySelect.value = 'Packaged Food';
         } catch (e) {
-            alert('Compliant test image not found.');
+            alert('Compliant test image not found on the server.');
         }
     });
 
@@ -369,7 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('file', currentEvidenceFile);
 
         try {
-            const resp = await fetch(apiUrl('/api/inspections/analyze-evidence'), {
+            const resp = await fetch(`${API_BASE}/api/inspections/analyze-evidence`, {
                 method: 'POST',
                 body: formData
             });
@@ -380,10 +373,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             currentAnalysisResult = await resp.json();
+
+            // Convert all relative server asset paths to absolute live URLs
+            currentAnalysisResult.evidence_image_url = formatAssetUrl(currentAnalysisResult.evidence_image_url);
+            currentAnalysisResult.crop_image_url = formatAssetUrl(currentAnalysisResult.crop_image_url);
+
+            if (currentAnalysisResult.preprocessing?.variants) {
+                currentAnalysisResult.preprocessing.variants.forEach(v => {
+                    v.image_url = formatAssetUrl(v.image_url);
+                });
+            }
+
             currentEvidenceUrl = currentAnalysisResult.evidence_image_url;
             renderInspectorWorkspace(currentAnalysisResult);
-
-            // Also populate AI Visualizer
             renderCoreAIVisualizer(currentAnalysisResult);
 
             inspectionWorkspace.classList.remove('hidden');
@@ -441,8 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 4. Evidence Image Preview
-        evidenceDisplayImg.src = apiUrl(res.evidence_image_url || res.crop_image_url) || imagePreview.src;
-        // Mock SHA-256 fingerprint
+        evidenceDisplayImg.src = res.evidence_image_url || res.crop_image_url || imagePreview.src;
         const shaShort = (res.detection?.average_agreement ? 'sha256_' + Math.random().toString(36).substring(2, 12) : 'sha256_e3b0c44298fc1c149afbf4c8996fb924');
         evidenceShaTag.innerHTML = `<i class="fa-solid fa-fingerprint"></i> SHA-256: <code>${shaShort}</code> (Chain of Custody Active)`;
 
@@ -463,7 +464,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 statusLabel = 'LOW_CONF';
             }
 
-            // Check if this field caused a violation
             const fieldViol = evalRes.violations?.find(v => v.issue && v.issue.toLowerCase().includes(f.key.replace('_', ' ')));
             if (fieldViol) {
                 statusClass = 'violation';
@@ -488,7 +488,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
             `;
 
-            // Listen for inspector edits
             const editInput = tr.querySelector('.decl-edit-input');
             editInput.addEventListener('input', () => {
                 const badge = document.getElementById(`badge_${f.key}`);
@@ -515,7 +514,7 @@ document.addEventListener('DOMContentLoaded', () => {
             store_id: parseInt(storeSelect.value) || 1,
             officer_id: activeUserSelect.value,
             category: commodityCategorySelect.value,
-            image_url: currentEvidenceUrl || '/uploads/field_evidence.jpg',
+            image_url: currentEvidenceUrl || `${API_BASE}/uploads/field_evidence.jpg`,
             evidence_image_url: currentEvidenceUrl,
             extracted_fields: edits,
             remarks: inspectorRemarksText.value || 'Routine market surveillance audit.',
@@ -532,7 +531,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const payload = buildInspectionPayload(true);
-            const resp = await fetch(apiUrl('/api/inspections'), {
+            const resp = await fetch(`${API_BASE}/api/inspections`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -549,13 +548,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             alert(`Inspection ${data.inspection_number} successfully registered in Legal Metrology Registry!\n\nCompliance Status: ${data.compliance_status}\nOfficial Form I PDF Generated.`);
 
-            // Enable PDF download button
+            // Enable PDF download button pointing directly to the backend stream
             btnDownloadPDF.disabled = false;
             btnDownloadPDF.onclick = () => {
-                window.open(apiUrl(`/api/inspections/${currentInspectionId}/report`), '_blank');
+                window.open(`${API_BASE}/api/inspections/${currentInspectionId}/report`, '_blank');
             };
 
-            // Refresh background tables
+            // Refresh dashboards
             loadSupervisorQueue('ALL');
             loadAdminAnalytics();
             loadAuditLogs();
@@ -573,7 +572,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // -------------------------------------------------------------------------
     async function loadSupervisorQueue(filter = 'ALL') {
         try {
-            const url = filter === 'ALL' ? apiUrl('/api/supervisor/inspections') : apiUrl(`/api/supervisor/inspections?status=${filter}`);
+            const url = filter === 'ALL'
+                ? `${API_BASE}/api/supervisor/inspections`
+                : `${API_BASE}/api/supervisor/inspections?status=${filter}`;
             const resp = await fetch(url);
             if (!resp.ok) return;
             const items = await resp.json();
@@ -657,7 +658,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         btnSubmitAdjudication.disabled = true;
         try {
-            const resp = await fetch(apiUrl(`/api/supervisor/adjudicate/${id}`), {
+            const resp = await fetch(`${API_BASE}/api/supervisor/adjudicate/${id}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -686,7 +687,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const category = document.getElementById('assignCategoryInput').value;
 
         try {
-            const resp = await fetch(apiUrl('/api/supervisor/assign'), {
+            const resp = await fetch(`${API_BASE}/api/supervisor/assign`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -710,7 +711,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // -------------------------------------------------------------------------
     async function loadAdminAnalytics() {
         try {
-            const resp = await fetch(apiUrl('/api/admin/analytics'));
+            const resp = await fetch(`${API_BASE}/api/admin/analytics`);
             if (!resp.ok) return;
             const data = await resp.json();
 
@@ -747,7 +748,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadAdminRules() {
         try {
-            const resp = await fetch(apiUrl('/api/admin/rules'));
+            const resp = await fetch(`${API_BASE}/api/admin/rules`);
             if (!resp.ok) return;
             const rules = await resp.json();
             rulesTableBody.innerHTML = '';
@@ -770,7 +771,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadAuditLogs() {
         try {
-            const resp = await fetch(apiUrl('/api/admin/audit-logs?limit=30'));
+            const resp = await fetch(`${API_BASE}/api/admin/audit-logs?limit=30`);
             if (!resp.ok) return;
             const logs = await resp.json();
             auditTableBody.innerHTML = '';
@@ -801,7 +802,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // -------------------------------------------------------------------------
     async function loadTraceabilityMatrix() {
         try {
-            const resp = await fetch(apiUrl('/api/legal/rules-traceability'));
+            const resp = await fetch(`${API_BASE}/api/legal/rules-traceability`);
             if (!resp.ok) return;
             const data = await resp.json();
             traceabilityTableBody.innerHTML = '';
@@ -825,7 +826,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadLegalInspectionOptions() {
         try {
-            const resp = await fetch(apiUrl('/api/inspections?limit=20'));
+            const resp = await fetch(`${API_BASE}/api/inspections?limit=20`);
             if (!resp.ok) return;
             const inspections = await resp.json();
             legalInspectionSelect.innerHTML = '<option value="">Select inspection record...</option>';
@@ -851,7 +852,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnGenerateLegalNotice.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
 
         try {
-            const resp = await fetch(apiUrl(`/api/legal/penalty-memo/${insId}`));
+            const resp = await fetch(`${API_BASE}/api/legal/penalty-memo/${insId}`);
             if (!resp.ok) throw new Error('Failed generating legal memorandum.');
             const data = await resp.json();
             legalMemoViewer.textContent = data.formal_legal_notice;
@@ -881,7 +882,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? { sha256_hash: inputVal, evidence_string: inputVal }
                 : { file_path: inputVal, sha256_hash: '' };
 
-            const resp = await fetch(apiUrl('/api/legal/verify-evidence'), {
+            const resp = await fetch(`${API_BASE}/api/legal/verify-evidence`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -938,7 +939,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // 2. Detection Ensemble
-        detCropPreview.src = apiUrl(res.crop_image_url || res.evidence_image_url);
+        detCropPreview.src = res.crop_image_url || res.evidence_image_url;
         detAgreementBadge.textContent = 'Agreement: ' + (res.detection?.average_agreement || '0.89');
 
         modelPredictionList.innerHTML = '';
@@ -955,7 +956,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const div = document.createElement('div');
             div.className = 'variant-card';
             div.innerHTML = `
-                <img src="${apiUrl(v.image_url)}" alt="${v.variant_name}">
+                <img src="${v.image_url}" alt="${v.variant_name}">
                 <div class="variant-meta">
                     <strong>${v.variant_name}</strong> &bull; Score: ${v.quality_score}
                 </div>
@@ -975,7 +976,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="ocr-line-conf">${engData.lines?.length || 0} lines</span>
                 </div>
                 <div class="ocr-lines-list">
-                    ${(engData.lines || []).slice(0, 15).map(l => `<div class="ocr-line-item"><span class="ocr-line-text">${l.text}</span><span class="ocr-line-conf">${Math.round(l.confidence*100)}%</span></div>`).join('')}
+                    ${(engData.lines || []).slice(0, 15).map(l => `<div class="ocr-line-item"><span class="ocr-line-text">${l.text}</span><span class="ocr-line-conf">${Math.round(l.confidence * 100)}%</span></div>`).join('')}
                 </div>
             `;
             ocrEngineColumnsGrid.appendChild(col);
@@ -994,7 +995,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 5. Gemini & Translation
         geminiValidationContent.innerHTML = `
-            <div class="subtext mb-2">Multimodal verification performed with Gemini Vision 3.6 Flash.</div>
+            <div class="subtext mb-2">Multimodal verification performed with Gemini Vision.</div>
             <pre class="font-mono text-emerald" style="white-space: pre-wrap; font-size: 0.8rem;">${JSON.stringify(res.gemini_validation || { verified: true, consensus: "Passed strict verification", hallucinations_detected: 0 }, null, 2)}</pre>
         `;
 
