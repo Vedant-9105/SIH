@@ -6,6 +6,24 @@
 // Base URL pointing directly to the live Render backend
 const API_BASE = '   https://9ebf-103-232-10-115.ngrok-free.app';
 
+// Example helper for your fetch calls:
+const headers = {
+    'Accept': 'application/json',
+    'ngrok-skip-browser-warning': 'true'
+};
+
+// For GET requests:
+fetch(`${API_BASE}/api/stores`, { headers })
+
+// For FormData/POST requests:
+fetch(`${API_BASE}/api/inspections/analyze-evidence`, {
+    method: 'POST',
+    body: formData,
+    headers: {
+        'ngrok-skip-browser-warning': 'true'
+    }
+})
+
 document.addEventListener('DOMContentLoaded', () => {
     // -------------------------------------------------------------------------
     // Global State
