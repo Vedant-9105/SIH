@@ -4,7 +4,7 @@
 // =============================================================================
 
 // Base URL pointing directly to the live Render backend
-const API_BASE = 'https://sih-2-bvqw.onrender.com';
+const API_BASE = '   https://9ebf-103-232-10-115.ngrok-free.app';
 
 document.addEventListener('DOMContentLoaded', () => {
     // -------------------------------------------------------------------------
