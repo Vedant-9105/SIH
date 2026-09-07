@@ -15,6 +15,7 @@ from src.database.seed_data import seed_database
 from src.routers import inspections_router, management_router, legal_router
 from ultralytics import YOLO, RTDETR
 
+# Load model weights
 model_yolo = YOLO("yolo11n.pt")
 model_rtdetr = RTDETR("rtdetr-l.pt")
 
@@ -32,7 +33,7 @@ app = FastAPI(
     version="2.0.0"
 )
 
-# CORS configuration
+# Robust CORS Configuration allowing all origins, methods, and headers
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -54,10 +55,17 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 app.mount("/outputs", StaticFiles(directory=str(OUTPUT_DIR)), name="outputs")
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
-# Include Modular Routers for Phase 2, 3, and 4
+# -----------------------------------------------------------------------------
+# Modular Router Inclusions
+# Mount both directly and with /api prefix to guarantee matching routes
+# -----------------------------------------------------------------------------
 app.include_router(inspections_router.router)
 app.include_router(management_router.router)
 app.include_router(legal_router.router)
+
+app.include_router(inspections_router.router, prefix="/api")
+app.include_router(management_router.router, prefix="/api")
+app.include_router(legal_router.router, prefix="/api")
 
 # Lazy pipeline initialization
 pipeline = None
@@ -97,6 +105,7 @@ async def get_status():
     }
 
 
+# Primary AI Image Processing Logic
 @app.post("/api/analyze")
 async def analyze_product(file: UploadFile = File(...)):
     if not file.content_type.startswith("image/"):
@@ -120,13 +129,17 @@ async def analyze_product(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Direct route match for frontend analyze-evidence call
+# Dedicated route aliases matching inspections endpoints in frontend app.js
 @app.post("/api/inspections/analyze-evidence")
-async def analyze_evidence_route(file: UploadFile = File(...)):
+async def analyze_evidence_alias(file: UploadFile = File(...)):
+    return await analyze_product(file)
+
+@app.post("/inspections/analyze-evidence")
+async def analyze_evidence_root_alias(file: UploadFile = File(...)):
     return await analyze_product(file)
 
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "8000"))
-    print(f"[Server] Starting server on http://127.0.0.1:{port}")
+    print(f"[Server] Starting server on http://0.0.0.0:{port}")
     uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
