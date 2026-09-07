@@ -28,21 +28,11 @@ app = FastAPI(
     version="2.0.0"
 )
 
-# Robust CORS Configuration supporting Vercel and local origins
-origins = [
-    "https://sih-bay-ten.vercel.app",
-    "https://sih-frontend-ruddy.vercel.app",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "*"
-]
-
+# Robust CORS Configuration supporting Render, Vercel, and local origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_origins=["*"],
+    allow_origin_regex=r"https://.*\.vercel\.app|https://.*\.onrender\.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -56,12 +46,20 @@ REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/outputs", StaticFiles(directory=str(OUTPUT_DIR)), name="outputs")
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
-# Include Modular Routers for Phase 2, 3, and 4
+# -----------------------------------------------------------------------------
+# Modular Routers Mounting
+# Mount both directly and under prefix="/api" to guarantee compatibility
+# whether frontend requests /stores or /api/stores, /legal or /api/legal
+# -----------------------------------------------------------------------------
 app.include_router(inspections_router.router)
 app.include_router(management_router.router)
 app.include_router(legal_router.router)
 
-# Lazy pipeline initialization (prevents startup OOM on Render)
+app.include_router(inspections_router.router, prefix="/api")
+app.include_router(management_router.router, prefix="/api")
+app.include_router(legal_router.router, prefix="/api")
+
+# Lazy pipeline initialization (prevents startup OOM on Render free tier)
 pipeline = None
 
 def get_pipeline():
@@ -129,6 +127,16 @@ async def analyze_product(file: UploadFile = File(...)):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Dedicated aliases ensuring analyze-evidence matches the frontend fetch path
+@app.post("/api/inspections/analyze-evidence")
+async def analyze_evidence_api_alias(file: UploadFile = File(...)):
+    return await analyze_product(file)
+
+@app.post("/inspections/analyze-evidence")
+async def analyze_evidence_root_alias(file: UploadFile = File(...)):
+    return await analyze_product(file)
 
 
 if __name__ == "__main__":
