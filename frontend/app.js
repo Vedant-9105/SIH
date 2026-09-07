@@ -753,13 +753,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const rules = await resp.json();
             rulesTableBody.innerHTML = '';
             rules.forEach(r => {
+                const fee = (r.default_compounding_fee !== undefined && r.default_compounding_fee !== null) ? r.default_compounding_fee : 5000;
+                const clause = r.rule_clause || r.legal_reference || r.category || 'PCR 2011';
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><strong>${r.rule_code}</strong></td>
-                    <td>${r.rule_clause}</td>
+                    <td>${clause}</td>
                     <td>${r.description}</td>
                     <td><span class="decl-status-badge ${r.severity === 'CRITICAL' ? 'violation' : 'edited'}">${r.severity}</span></td>
-                    <td>₹${r.default_compounding_fee.toLocaleString()}</td>
+                    <td>₹${Number(fee).toLocaleString()}</td>
                     <td><i class="fa-solid fa-check text-emerald"></i> Mandatory</td>
                 `;
                 rulesTableBody.appendChild(tr);

@@ -123,9 +123,16 @@ class RTDETRDetector:
 
     def _load_model(self):
         try:
-            from ultralytics import RTDETR
             weights = BASE_DIR / "rtdetr-l.pt"
-            self.model = RTDETR(str(weights) if weights.exists() else "rtdetr-l.pt")
+            if weights.exists():
+                from ultralytics import RTDETR
+                self.model = RTDETR(str(weights))
+            elif os.getenv("ENABLE_RTDETR", "false").lower() == "true":
+                from ultralytics import RTDETR
+                self.model = RTDETR("rtdetr-l.pt")
+            else:
+                # Do not download 125MB weights on free-tier RAM instances
+                self.model = None
         except Exception as e:
             self.model = None
 

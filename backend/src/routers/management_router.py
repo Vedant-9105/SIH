@@ -201,13 +201,15 @@ def get_rules(db: Session = Depends(get_db)):
         {
             "id": r.id,
             "rule_code": r.rule_code,
+            "rule_clause": r.legal_reference,
             "category": r.category,
             "description": r.description,
             "legal_reference": r.legal_reference,
             "requirement_text": r.requirement_text,
             "severity": r.severity,
             "weight": r.weight,
-            "is_active": r.is_active
+            "is_active": r.is_active,
+            "default_compounding_fee": 10000 if r.severity == "CRITICAL" else 5000
         }
         for r in rules
     ]
