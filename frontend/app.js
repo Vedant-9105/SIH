@@ -4,7 +4,7 @@
 // =============================================================================
 
 // Base URL pointing directly to the live Render backend
-const API_BASE = 'https://project-humnread.onrender.com';
+const API_BASE = 'https://sih-24dq.onrender.com';
 
 document.addEventListener('DOMContentLoaded', () => {
     // -------------------------------------------------------------------------
