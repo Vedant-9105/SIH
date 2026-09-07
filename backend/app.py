@@ -13,7 +13,7 @@ from src.config import UPLOAD_DIR, OUTPUT_DIR, BASE_DIR
 from src.database.connection import engine, Base, SessionLocal
 from src.database.seed_data import seed_database
 from src.routers import inspections_router, management_router, legal_router
-
+from ultralytics import RTDETR, YOLO
 # Ultralytics will auto-download these if not found locally
 model_yolo = YOLO("yolo11n.pt")
 model_rtdetr = RTDETR("rtdetr-l.pt")
