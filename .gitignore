@@ -29,3 +29,4 @@ outputs/
 uploads/
 __pycache__/
 .env*
+.vercel

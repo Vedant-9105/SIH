@@ -13,11 +13,6 @@ from src.config import UPLOAD_DIR, OUTPUT_DIR, BASE_DIR
 from src.database.connection import engine, Base, SessionLocal
 from src.database.seed_data import seed_database
 from src.routers import inspections_router, management_router, legal_router
-from ultralytics import YOLO, RTDETR
-
-# Load model weights
-model_yolo = YOLO("yolo11n.pt")
-model_rtdetr = RTDETR("rtdetr-l.pt")
 
 # Initialize database tables & seed data
 Base.metadata.create_all(bind=engine)
@@ -33,41 +28,40 @@ app = FastAPI(
     version="2.0.0"
 )
 
-# Robust CORS Configuration allowing all origins, methods, and headers
+# Robust CORS Configuration supporting Vercel and local origins
+origins = [
+    "https://sih-bay-ten.vercel.app",
+    "https://sih-frontend-ruddy.vercel.app",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "*"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"]
 )
 
-# Mount static and output directories
-STATIC_DIR = BASE_DIR / "static"
-STATIC_DIR.mkdir(exist_ok=True)
-TEMPLATES_DIR = BASE_DIR / "templates"
-TEMPLATES_DIR.mkdir(exist_ok=True)
+# Mount media and output directories
 REPORTS_DIR = OUTPUT_DIR / "reports"
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
-app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 app.mount("/outputs", StaticFiles(directory=str(OUTPUT_DIR)), name="outputs")
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
-# -----------------------------------------------------------------------------
-# Modular Router Inclusions
-# Mount both directly and with /api prefix to guarantee matching routes
-# -----------------------------------------------------------------------------
+# Include Modular Routers for Phase 2, 3, and 4
 app.include_router(inspections_router.router)
 app.include_router(management_router.router)
 app.include_router(legal_router.router)
 
-app.include_router(inspections_router.router, prefix="/api")
-app.include_router(management_router.router, prefix="/api")
-app.include_router(legal_router.router, prefix="/api")
-
-# Lazy pipeline initialization
+# Lazy pipeline initialization (prevents startup OOM on Render)
 pipeline = None
 
 def get_pipeline():
@@ -77,12 +71,20 @@ def get_pipeline():
     return pipeline
 
 
-@app.get("/", response_class=HTMLResponse)
-async def serve_index():
-    index_file = TEMPLATES_DIR / "index.html"
-    if index_file.exists():
-        return FileResponse(str(index_file))
-    return HTMLResponse("<h1>Multi-Model Product Extraction Engine</h1><p>UI is initializing...</p>")
+@app.get("/")
+async def root():
+    return {
+        "service": "Legal Metrology Compliance Enforcement API",
+        "status": "online",
+        "version": "2.0.0",
+        "docs_url": "/docs",
+        "api_status": "/api/status"
+    }
+
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "timestamp": time.time()}
 
 
 @app.get("/favicon.ico")
@@ -127,16 +129,6 @@ async def analyze_product(file: UploadFile = File(...)):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
-
-
-# Dedicated route aliases matching inspections endpoints in frontend app.js
-@app.post("/api/inspections/analyze-evidence")
-async def analyze_evidence_alias(file: UploadFile = File(...)):
-    return await analyze_product(file)
-
-@app.post("/inspections/analyze-evidence")
-async def analyze_evidence_root_alias(file: UploadFile = File(...)):
-    return await analyze_product(file)
 
 
 if __name__ == "__main__":
