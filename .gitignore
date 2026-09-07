@@ -1,0 +1,25 @@
+# Environments and credentials
+.env
+.env.local
+*.env
+
+# Python Virtual Environments & Bytecode
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Dynamic pipeline runs and storage
+backend/uploads/*
+!backend/uploads/synthetic_test_product.jpg
+!backend/uploads/test_non_compliant_dal.jpg
+backend/outputs/*
+backend/cache/*

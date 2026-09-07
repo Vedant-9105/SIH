@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Legal Metrology Compliance Enforcement Portal — Government of India</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-brand">
+                <div class="logo-badge">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>Legal Metrology Enforcement System <span class="badge-ensemble">GoI &bull; PCR 2011</span></h1>
+                    <p class="tagline">Central Regulatory Enforcement &bull; Legal Metrology Act, 2009 &bull; Packaged Commodities Rules, 2011</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="accuracy-badge">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Principle: Accuracy &gt; Completeness</span>
+                </div>
+                <div class="sync-pill" id="globalSyncBadge">
+                    <i class="fa-solid fa-wifi"></i> <span id="syncText">Online</span>
+                </div>
+                <button class="btn-secondary" id="btnHeaderSync" title="Synchronize Local Cache">
+                    <i class="fa-solid fa-arrows-rotate"></i> Sync (<span id="offlineCountBadge">0</span>)
+                </button>
+            </div>
+        </header>
+
+        <!-- Top Role Navigation Bar -->
+        <nav class="role-nav-bar">
+            <div class="role-tabs">
+                <button class="role-tab active" data-tab="tabInspector">
+                    <i class="fa-solid fa-clipboard-check"></i> Field Inspector Terminal
+                </button>
+                <button class="role-tab" data-tab="tabSupervisor">
+                    <i class="fa-solid fa-user-tie"></i> Supervisor Adjudication
+                </button>
+                <button class="role-tab" data-tab="tabAdmin">
+                    <i class="fa-solid fa-chart-line"></i> Admin &amp; Analytics
+                </button>
+                <button class="role-tab" data-tab="tabLegal">
+                    <i class="fa-solid fa-gavel"></i> Legal &amp; Traceability
+                </button>
+                <button class="role-tab" data-tab="tabCoreAI">
+                    <i class="fa-solid fa-microchip"></i> Core AI Pipeline Visualizer
+                </button>
+            </div>
+            <div class="role-user-selector">
+                <i class="fa-solid fa-user-shield"></i>
+                <select id="activeUserSelect" class="user-select-dropdown">
+                    <option value="LMO001">Inspector Rajesh Kumar (LMO-MH-2024-042)</option>
+                    <option value="LMO002">Inspector Priya Sharma (LMO-KA-2024-019)</option>
+                    <option value="SUP001">Supervisor Vikramaditya Singh (ACL-MH-001)</option>
+                    <option value="ADM001">Admin Dr. Alok Verma (CLM-DIR-001)</option>
+                    <option value="LEG001">Legal Counsel Adv. P. Mehta (LEG-ENF-001)</option>
+                </select>
+            </div>
+        </nav>
+
+        <!-- Main Layout Panes -->
+        <main class="main-content">
+
+            <!-- ========================================================================= -->
+            <!-- TAB 1: FIELD INSPECTOR TERMINAL (PHASE 2) -->
+            <!-- ========================================================================= -->
+            <section class="tab-pane active" id="tabInspector">
+                <!-- Inspection Setup Bar -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-store"></i> Inspection Setup &amp; Store Geolocation</h3>
+                        <span class="badge-pill" id="inspectionIdBadge">INSP-NEW-DRAFT</span>
+                    </div>
+                    <div class="setup-grid">
+                        <div class="form-group">
+                            <label><i class="fa-solid fa-shop"></i> Establishment / Retail Store</label>
+                            <select id="storeSelect" class="form-control">
+                                <option value="">Loading licensed establishments...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fa-solid fa-tags"></i> Commodity Category</label>
+                            <select id="commodityCategorySelect" class="form-control">
+                                <option value="Packaged Food">Packaged Food &amp; Edible Products</option>
+                                <option value="Cosmetics &amp; Toiletries">Cosmetics, Personal Care &amp; Toiletries</option>
+                                <option value="Electronics &amp; Appliances">Electronics, Batteries &amp; Appliances</option>
+                                <option value="Personal Care &amp; Household">Household Cleaners &amp; Personal Care</option>
+                                <option value="Pharmaceutical &amp; Baby Food">Pharmaceutical &amp; Infant Nutrition</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fa-solid fa-id-card"></i> Legal Metrology Officer</label>
+                            <input type="text" id="inspectorNameField" class="form-control" value="Rajesh Kumar (LMO-MH-2024-042)" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fa-solid fa-clock"></i> Inspection Timestamp</label>
+                            <input type="text" id="inspectionDateField" class="form-control" value="Live Field Session" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Evidence Capture & Sample Test Bar -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-camera"></i> Evidence Image Acquisition &amp; Synthetic Test Commodity</h3>
+                        <div class="quick-samples">
+                            <span class="text-muted mr-2">Quick Test Bench:</span>
+                            <button class="btn-xs btn-sample" id="btnLoadNonCompliantSample">
+                                <i class="fa-solid fa-triangle-exclamation text-amber"></i> Load Non-Compliant Dal (GMS &amp; No Email)
+                            </button>
+                            <button class="btn-xs btn-sample" id="btnLoadCompliantSample">
+                                <i class="fa-solid fa-circle-check text-emerald"></i> Load Fully Compliant Biscuit
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dropzone -->
+                    <div class="upload-card" id="dropZone">
+                        <input type="file" id="fileInput" accept="image/*" class="file-input-hidden">
+                        <div class="drop-content" id="dropPrompt">
+                            <div class="upload-icon-circle">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                            </div>
+                            <h3>Upload Commodity Packaging Evidence</h3>
+                            <p>Drag and drop photograph or <span class="browse-link">browse evidence files</span> (JPEG, PNG, WebP)</p>
+                            <div class="format-tags">
+                                <span class="tag">Primary Display Panel (Front)</span>
+                                <span class="tag">Declarations Panel (Back)</span>
+                                <span class="tag">MRP &amp; Date Panel</span>
+                                <span class="tag">Barcode / FSSAI Seal</span>
+                            </div>
+                        </div>
+                        <div class="preview-content hidden" id="previewContainer">
+                            <img id="imagePreview" alt="Upload Preview" src="">
+                            <div class="preview-actions">
+                                <button class="btn-primary" id="btnAnalyzeEvidence">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Run AI Enforcement Pipeline &amp; Rule Matching
+                                </button>
+                                <button class="btn-outline" id="btnResetImage">
+                                    <i class="fa-solid fa-arrow-rotate-left"></i> Replace Evidence
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pipeline Execution Progress Banner -->
+                    <div class="processing-card hidden" id="processingBanner">
+                        <div class="pulse-loader">
+                            <div class="spinner"></div>
+                        </div>
+                        <div class="processing-info">
+                            <h4 id="processingStageTitle">Executing Statutory AI Pipeline...</h4>
+                            <p id="processingStageDesc">Running YOLO11 detection ensemble, image quality filters, OCR consensus fusion, and Gemini multimodal verification.</p>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar-fill" id="progressBar"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Side-by-Side Dual-Pane Human Verification Workspace -->
+                <div class="inspection-workspace hidden" id="inspectionWorkspace">
+                    <!-- Top Compliance Summary Bar -->
+                    <div class="compliance-summary-bar mb-4" id="complianceSummaryBar">
+                        <div class="summary-metric">
+                            <span class="metric-label">Compliance Status</span>
+                            <span class="metric-val status-badge-pill" id="evalStatusBadge">EVALUATING</span>
+                        </div>
+                        <div class="summary-metric">
+                            <span class="metric-label">Statutory Compliance Score</span>
+                            <span class="metric-val text-indigo" id="evalScoreVal">--%</span>
+                        </div>
+                        <div class="summary-metric">
+                            <span class="metric-label">Detected Violations</span>
+                            <span class="metric-val text-rose" id="evalViolationsVal">0</span>
+                        </div>
+                        <div class="summary-metric">
+                            <span class="metric-label">Sec 48 Compounding Penalty</span>
+                            <span class="metric-val text-amber" id="evalPenaltyVal">₹0.00</span>
+                        </div>
+                        <div class="summary-metric">
+                            <span class="metric-label">Prosecution Escalation</span>
+                            <span class="metric-val" id="evalProsecutionVal">None</span>
+                        </div>
+                    </div>
+
+                    <!-- Violations Notification Cards (Visible when infractions detected) -->
+                    <div class="violations-container mb-4 hidden" id="violationsContainer">
+                        <h4 class="violations-header"><i class="fa-solid fa-triangle-exclamation"></i> Statutory Infringements Detected under Legal Metrology Act, 2009</h4>
+                        <div class="violations-list" id="violationsList">
+                            <!-- Dynamic Violation Cards -->
+                        </div>
+                    </div>
+
+                    <!-- Split Workspace: Evidence Preview vs Declarations Table -->
+                    <div class="split-workspace-grid">
+                        <!-- Left Pane: Evidence Image with Overlay -->
+                        <div class="card evidence-pane">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-magnifying-glass"></i> Packaging Evidence View</h3>
+                                <span class="badge-pill" id="evidenceVariantBadge">Enhanced Sauvola</span>
+                            </div>
+                            <div class="evidence-image-wrapper">
+                                <img id="evidenceDisplayImg" src="" alt="Evidence Commodity Packaging">
+                            </div>
+                            <div class="evidence-footer">
+                                <span class="hash-tag" id="evidenceShaTag"><i class="fa-solid fa-fingerprint"></i> SHA-256: Computing...</span>
+                            </div>
+                        </div>
+
+                        <!-- Right Pane: Declarations Human Verification Form -->
+                        <div class="card declarations-pane">
+                            <div class="card-header">
+                                <div>
+                                    <h3><i class="fa-solid fa-list-check"></i> Statutory Declarations (14 Fields)</h3>
+                                    <p class="subtext">Verify AI detections &bull; Edit any field directly &bull; Human Inspector retains ultimate authority.</p>
+                                </div>
+                                <span class="badge-pill-accent" id="verificationStateBadge"><i class="fa-solid fa-pen-to-square"></i> Officer Review</span>
+                            </div>
+
+                            <div class="declarations-table-wrapper">
+                                <table class="declarations-table" id="declarationsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Statutory Field</th>
+                                            <th>AI Detected</th>
+                                            <th>Officer Verified Value</th>
+                                            <th>Confidence</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="declarationsTableBody">
+                                        <!-- Dynamic 14 Rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="inspector-remarks-box">
+                                <label><i class="fa-solid fa-comment-dots"></i> Legal Metrology Officer Official Remarks</label>
+                                <textarea id="inspectorRemarksText" class="form-control" rows="2" placeholder="Enter inspection notes, store manager statement, sample seizure remarks..."></textarea>
+                            </div>
+
+                            <!-- Action Bar -->
+                            <div class="inspector-actions-bar">
+                                <button class="btn-primary" id="btnSignSubmit">
+                                    <i class="fa-solid fa-signature"></i> Sign &amp; Submit Inspection
+                                </button>
+                                <button class="btn-secondary" id="btnDownloadPDF" disabled>
+                                    <i class="fa-solid fa-file-pdf"></i> Download Form I Inspection Memo (PDF)
+                                </button>
+                                <button class="btn-outline" id="btnSaveOffline">
+                                    <i class="fa-solid fa-box-archive"></i> Queue for Offline Sync
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================================= -->
+            <!-- TAB 2: SUPERVISOR ADJUDICATION TERMINAL (PHASE 3) -->
+            <!-- ========================================================================= -->
+            <section class="tab-pane" id="tabSupervisor">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <div>
+                            <h3><i class="fa-solid fa-gavel"></i> Supervisor Adjudication &amp; Compounding Queue</h3>
+                            <p class="subtext">Adjudicate violations under Section 48 (Compounding) or recommend Judicial Prosecution under Section 36.</p>
+                        </div>
+                        <div class="queue-filters">
+                            <button class="btn-filter active" data-filter="ALL">All Inspections</button>
+                            <button class="btn-filter" data-filter="PENDING">Pending Review</button>
+                            <button class="btn-filter" data-filter="COMPOUNDED">Compounded (Sec 48)</button>
+                            <button class="btn-filter" data-filter="REFERRED_FOR_PROSECUTION">Prosecution (Sec 36)</button>
+                            <button class="btn-secondary" id="btnRefreshSupervisor"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table" id="supervisorTable">
+                            <thead>
+                                <tr>
+                                    <th>Inspection ID</th>
+                                    <th>Establishment</th>
+                                    <th>Commodity</th>
+                                    <th>Inspection Date</th>
+                                    <th>Score</th>
+                                    <th>Violations</th>
+                                    <th>Inspector</th>
+                                    <th>Compounding Fee</th>
+                                    <th>Adjudication Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="supervisorTableBody">
+                                <!-- Dynamic Supervisor Inspection Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Quick Assign Task Box -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-clipboard-list"></i> Issue Targeted Inspection Assignment</h3>
+                    </div>
+                    <div class="setup-grid">
+                        <div class="form-group">
+                            <label>Target Store</label>
+                            <select id="assignStoreSelect" class="form-control"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Assign to Officer</label>
+                            <select id="assignOfficerSelect" class="form-control"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Commodity Category</label>
+                            <input type="text" id="assignCategoryInput" class="form-control" value="Packaged Food &amp; Spices">
+                        </div>
+                        <div class="form-group" style="display:flex; align-items:flex-end;">
+                            <button class="btn-primary w-100" id="btnDispatchAssignment">
+                                <i class="fa-solid fa-paper-plane"></i> Dispatch Surveillance Order
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================================= -->
+            <!-- TAB 3: ADMIN & ANALYTICS CONSOLE (PHASE 3) -->
+            <!-- ========================================================================= -->
+            <section class="tab-pane" id="tabAdmin">
+                <!-- Analytics KPIs -->
+                <div class="kpi-grid mb-4">
+                    <div class="kpi-card">
+                        <div class="kpi-icon indigo"><i class="fa-solid fa-clipboard-check"></i></div>
+                        <div class="kpi-data">
+                            <span class="kpi-val" id="adminKpiTotal">0</span>
+                            <span class="kpi-label">Total Field Inspections</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon emerald"><i class="fa-solid fa-shield-check"></i></div>
+                        <div class="kpi-data">
+                            <span class="kpi-val" id="adminKpiComplianceRate">0%</span>
+                            <span class="kpi-label">Compliance Pass Rate</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon rose"><i class="fa-solid fa-ban"></i></div>
+                        <div class="kpi-data">
+                            <span class="kpi-val" id="adminKpiNonCompliant">0</span>
+                            <span class="kpi-label">Non-Compliant Violations</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon amber"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                        <div class="kpi-data">
+                            <span class="kpi-val" id="adminKpiFees">₹0</span>
+                            <span class="kpi-label">Compounding Penalties Accrued</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Infringements & Severity Breakdown -->
+                <div class="grid-2-col mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-chart-pie"></i> Top Statutory Infringements</h3>
+                        </div>
+                        <div class="top-rules-list" id="topRulesList">
+                            <!-- Dynamic Top Violated Rules -->
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-sliders"></i> AI Calibration &amp; Confidence Thresholds</h3>
+                        </div>
+                        <div class="calibration-controls">
+                            <div class="slider-group">
+                                <label><span>Minimum OCR Fusion Confidence:</span> <strong id="valOcrThresh">85%</strong></label>
+                                <input type="range" id="sliderOcrThresh" min="60" max="98" value="85" class="range-slider">
+                            </div>
+                            <div class="slider-group">
+                                <label><span>Detection Ensemble Consensus Agreement:</span> <strong id="valDetThresh">80%</strong></label>
+                                <input type="range" id="sliderDetThresh" min="60" max="98" value="80" class="range-slider">
+                            </div>
+                            <div class="slider-group">
+                                <label><span>Gemini Multimodal Strictness:</span> <strong>Active Verification (Zero Hallucinations)</strong></label>
+                                <div class="toggle-box">
+                                    <input type="checkbox" id="chkStrictGemini" checked>
+                                    <span>Require Multimodal Verification on All Declarations</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statutory Rules Directory Table -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-book-bookmark"></i> Legal Metrology (Packaged Commodities) Rules Directory</h3>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table" id="rulesTable">
+                            <thead>
+                                <tr>
+                                    <th>Rule Code</th>
+                                    <th>Statutory Clause</th>
+                                    <th>Description &amp; Requirement</th>
+                                    <th>Severity</th>
+                                    <th>Default Penalty (₹)</th>
+                                    <th>Mandatory</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rulesTableBody">
+                                <!-- Dynamic Rules -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Immutable Audit Trail -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-clock-rotate-left"></i> Immutable Audit Trail &amp; Chain of Custody Log</h3>
+                        <button class="btn-xs btn-secondary" id="btnRefreshAudit"><i class="fa-solid fa-arrows-rotate"></i> Refresh Log</button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table" id="auditTable">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp (UTC)</th>
+                                    <th>Action</th>
+                                    <th>Target Type</th>
+                                    <th>Target ID</th>
+                                    <th>Officer / User</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="auditTableBody">
+                                <!-- Dynamic Audit Logs -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================================= -->
+            <!-- TAB 4: LEGAL REVIEWER & TRACEABILITY CONSOLE (PHASE 4) -->
+            <!-- ========================================================================= -->
+            <section class="tab-pane" id="tabLegal">
+                <!-- Traceability Matrix -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <div>
+                            <h3><i class="fa-solid fa-sitemap"></i> Statutory Rule Traceability Matrix</h3>
+                            <p class="subtext">Legal Metrology Act, 2009 &bull; Legal Metrology (Packaged Commodities) Rules, 2011 &bull; Gazette Notifications</p>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table" id="traceabilityTable">
+                            <thead>
+                                <tr>
+                                    <th>Statutory Declaration</th>
+                                    <th>Act Section</th>
+                                    <th>Rule Clause</th>
+                                    <th>Gazette Notification</th>
+                                    <th>Offence Category</th>
+                                    <th>Punitive Section</th>
+                                    <th>Compounding (Sec 48)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="traceabilityTableBody">
+                                <!-- Dynamic Traceability Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Section 36 Penalty Memo Generator & Evidence Chain of Custody -->
+                <div class="grid-2-col">
+                    <!-- Penalty Memo Generator -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-file-shield"></i> Section 36 Legal Notice &amp; Show-Cause Generator</h3>
+                        </div>
+                        <div class="p-3">
+                            <div class="form-group mb-3">
+                                <label>Select Finalized Inspection</label>
+                                <select id="legalInspectionSelect" class="form-control">
+                                    <option value="">Select inspection record...</option>
+                                </select>
+                            </div>
+                            <button class="btn-primary mb-3" id="btnGenerateLegalNotice">
+                                <i class="fa-solid fa-scroll"></i> Generate Formal Statutory Show-Cause Notice
+                            </button>
+                            <div class="memo-box-container">
+                                <div class="memo-header-actions">
+                                    <span class="subtext">Official Summons Memo:</span>
+                                    <button class="btn-xs btn-outline" id="btnCopyMemo"><i class="fa-solid fa-copy"></i> Copy Memo</button>
+                                </div>
+                                <pre class="legal-memo-viewer" id="legalMemoViewer">Select an inspection and click 'Generate Formal Statutory Show-Cause Notice' to produce the legal memorandum.</pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Digital Evidence Hash Verifier -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-fingerprint"></i> Digital Evidence Chain-of-Custody Integrity Verifier</h3>
+                        </div>
+                        <div class="p-3">
+                            <p class="subtext mb-3">Cryptographic SHA-256 validation of Form I Inspection Reports and raw packaging photographs to guarantee tamper-evident integrity in judicial proceedings.</p>
+                            <div class="form-group mb-3">
+                                <label>Report File Path / Stored SHA-256 Hash</label>
+                                <input type="text" id="verifyHashInput" class="form-control font-mono" placeholder="Paste SHA-256 Digest or Report Path...">
+                            </div>
+                            <button class="btn-secondary mb-3" id="btnVerifyIntegrity">
+                                <i class="fa-solid fa-shield-halved"></i> Verify Cryptographic Authenticity
+                            </button>
+                            <div class="integrity-result-box hidden" id="integrityResultBox">
+                                <div class="integrity-status-banner" id="integrityStatusBanner">
+                                    <i class="fa-solid fa-check-double"></i> <span id="integrityStatusText">AUTHENTIC_UNALTERED_EVIDENCE</span>
+                                </div>
+                                <div class="integrity-details" id="integrityDetails">
+                                    <!-- Dynamic details -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================================= -->
+            <!-- TAB 5: CORE AI VISION PIPELINE VISUALIZER (PHASE 1) -->
+            <!-- ========================================================================= -->
+            <section class="tab-pane" id="tabCoreAI">
+                <!-- AI Visualizer Nav Tabs -->
+                <div class="ai-tabs mb-4">
+                    <button class="ai-tab active" data-subtab="aiTabDeclarations"><i class="fa-solid fa-list"></i> Declarations</button>
+                    <button class="ai-tab" data-subtab="aiTabDetection"><i class="fa-solid fa-crop"></i> Detection Ensemble</button>
+                    <button class="ai-tab" data-subtab="aiTabPreprocessing"><i class="fa-solid fa-sliders"></i> Image Preprocessing Suite</button>
+                    <button class="ai-tab" data-subtab="aiTabOCR"><i class="fa-solid fa-font"></i> Multi-OCR Fusion</button>
+                    <button class="ai-tab" data-subtab="aiTabGemini"><i class="fa-solid fa-robot"></i> Gemini Multimodal &amp; Translation</button>
+                    <button class="ai-tab" data-subtab="aiTabJSON"><i class="fa-solid fa-code"></i> Structured JSON</button>
+                </div>
+
+                <!-- Subtab 1: Declarations Grid -->
+                <div class="ai-subpane active" id="aiTabDeclarations">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-boxes-stacked"></i> Mandatory Declarations Extracted</h3>
+                            <div class="filter-pills">
+                                <button class="pill active" data-filter="all">All (14)</button>
+                                <button class="pill" data-filter="confirmed">Confirmed</button>
+                                <button class="pill" data-filter="low_confidence">Review Needed</button>
+                                <button class="pill" data-filter="missing">Missing</button>
+                            </div>
+                        </div>
+                        <div class="declarations-grid" id="declarationsGrid">
+                            <p class="text-muted p-4">Run an analysis in the Field Inspector Terminal to populate core AI extractions.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subtab 2: Detection Ensemble -->
+                <div class="ai-subpane" id="aiTabDetection">
+                    <div class="grid-2-col">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-object-ungroup"></i> Multi-Model Detection Ensemble</h3>
+                                <span class="badge-pill" id="detAgreementBadge">Consensus: --</span>
+                            </div>
+                            <div class="det-image-box">
+                                <img id="detCropPreview" src="" alt="Cropped Commodity">
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-chart-simple"></i> Model Predictions &amp; Bounding Boxes</h3>
+                            </div>
+                            <div class="model-prediction-list" id="modelPredictionList">
+                                <!-- Dynamic Detection Model Cards -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subtab 3: Preprocessing Suite -->
+                <div class="ai-subpane" id="aiTabPreprocessing">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-images"></i> 7-Variant Preprocessing Suite (PyTorch &amp; OpenCV)</h3>
+                            <span class="badge-pill" id="bestVariantBadge">Optimal: Sauvola</span>
+                        </div>
+                        <div class="variants-grid" id="variantsGrid">
+                            <!-- Dynamic Preprocessing Variant Thumbnails -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subtab 4: Multi-OCR Fusion -->
+                <div class="ai-subpane" id="aiTabOCR">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-layer-group"></i> Multi-Engine OCR Outputs</h3>
+                            <span class="badge-pill">RapidOCR + Tesseract + WinOCR</span>
+                        </div>
+                        <div class="ocr-engine-columns-grid" id="ocrEngineColumnsGrid">
+                            <!-- Dynamic OCR Columns -->
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-align-left"></i> Fused Reading Order Transcript</h3>
+                        </div>
+                        <div class="transcript-container" id="ocrTranscriptBox">
+                            <!-- Dynamic Transcript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subtab 5: Gemini Multimodal & Translation -->
+                <div class="ai-subpane" id="aiTabGemini">
+                    <div class="grid-2-col">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-robot"></i> Gemini Multimodal Visual Verification</h3>
+                                <span class="badge-pill" id="geminiStatusBadge">Verified</span>
+                            </div>
+                            <div class="gemini-content" id="geminiValidationContent">
+                                <!-- Dynamic Gemini Visual Notes -->
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-language"></i> Multilingual Translation Log</h3>
+                            </div>
+                            <div class="translation-list" id="translationList">
+                                <!-- Dynamic Translations -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subtab 6: Structured JSON -->
+                <div class="ai-subpane" id="aiTabJSON">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-file-code"></i> Standard Packaged-Product Extraction JSON</h3>
+                            <div class="json-actions">
+                                <button class="btn-sm" id="btnCopyJSON"><i class="fa-solid fa-copy"></i> Copy JSON</button>
+                                <button class="btn-sm" id="btnDownloadJSON"><i class="fa-solid fa-download"></i> Download</button>
+                            </div>
+                        </div>
+                        <pre class="json-viewer" id="jsonViewerBlock"><code>{}</code></pre>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Supervisor Adjudication Modal -->
+    <div class="modal-overlay hidden" id="adjudicationModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-gavel"></i> Supervisor Adjudication Order</h3>
+                <button class="btn-modal-close" id="btnCloseAdjudicationModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="adjInspectionId">
+                <div class="adj-summary mb-3" id="adjSummaryBox">
+                    <!-- Summary info -->
+                </div>
+                <div class="form-group mb-3">
+                    <label>Adjudication Decision</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="adjAction" value="ISSUE_COMPOUNDING_NOTICE" checked>
+                            <span><strong>Section 48 Compounding Order</strong> (Impose administrative composition fee)</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="adjAction" value="REFER_FOR_PROSECUTION">
+                            <span><strong>Section 36 Judicial Prosecution</strong> (Forward to Judicial Magistrate for formal trial)</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="adjAction" value="APPROVE_COMPLIANT">
+                            <span><strong>Dismiss / Mark Compliant</strong> (Exonerate after examination)</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group mb-3" id="compoundingFeeGroup">
+                    <label>Compounding Amount (₹)</label>
+                    <input type="number" id="adjCompoundingFee" class="form-control" value="5000">
+                </div>
+                <div class="form-group mb-3">
+                    <label>Supervisor Statutory Adjudication Notes</label>
+                    <textarea id="adjNotes" class="form-control" rows="3" placeholder="Enter reason for compounding composition or prosecution grounds..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="btnCancelAdjudication">Cancel</button>
+                <button class="btn-primary" id="btnSubmitAdjudication"><i class="fa-solid fa-stamp"></i> Issue Adjudication Order</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="./app.js"></script>
+</body>
+</html>
