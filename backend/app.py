@@ -14,6 +14,10 @@ from src.database.connection import engine, Base, SessionLocal
 from src.database.seed_data import seed_database
 from src.routers import inspections_router, management_router, legal_router
 
+# Ultralytics will auto-download these if not found locally
+model_yolo = YOLO("yolo11n.pt")
+model_rtdetr = RTDETR("rtdetr-l.pt")
+
 # Initialize database tables & seed data
 Base.metadata.create_all(bind=engine)
 _db = SessionLocal()

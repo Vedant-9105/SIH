@@ -23,3 +23,9 @@ backend/uploads/*
 !backend/uploads/test_non_compliant_dal.jpg
 backend/outputs/*
 backend/cache/*
+*.pt
+cache/
+outputs/
+uploads/
+__pycache__/
+.env*
