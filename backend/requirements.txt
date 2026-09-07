@@ -1,7 +1,8 @@
-# Production WSGI / ASGI Server & API Framework
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# Production ASGI Server & API Framework
 fastapi>=0.110.0
 uvicorn[standard]>=0.28.0
-gunicorn>=21.2.0
 python-multipart>=0.0.9
 pydantic>=2.0.0
 
@@ -9,7 +10,7 @@ pydantic>=2.0.0
 sqlalchemy>=2.0.0
 python-dotenv>=1.0.0
 
-# Computer Vision & Deep Learning
+# Computer Vision & Deep Learning (CPU-only)
 numpy>=1.24.0
 pandas>=2.0.0
 opencv-python-headless>=4.8.0
@@ -19,9 +20,7 @@ torchvision>=0.15.0
 ultralytics>=8.1.0
 scikit-image>=0.21.0
 
-# PDF Reports & Legal Document Generation
+# PDF Reports & Multilingual Tools
 reportlab>=4.0.0
-
-# Multilingual & Multimodal Validation
 deep-translator>=1.11.4
 google-genai>=0.1.0
